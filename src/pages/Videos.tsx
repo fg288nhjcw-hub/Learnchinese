@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Link } from 'react-router-dom'
@@ -12,10 +12,30 @@ interface Video {
   thumbnail?: string
 }
 
+// Default videos visible to all users
+const DEFAULT_VIDEOS: Video[] = [
+  {
+    id: 'default-1',
+    title: 'No muna in china?!',
+    url: 'https://www.tiktok.com/@talkmandarin1/video/7654383762523933983',
+    category: 'Culture',
+  },
+  {
+    id: 'default-2',
+    title: 'Hot water only?!',
+    url: 'https://www.tiktok.com/@talkmandarin1/video/7654527540496813343',
+    category: 'Culture',
+  },
+]
+
 function Videos() {
   const [videos, setVideos] = useState<Video[]>(() => {
     const saved = localStorage.getItem('chinese-videos')
-    return saved ? JSON.parse(saved) : []
+    const userVideos = saved ? JSON.parse(saved) : []
+    // Merge default videos with user-added videos (avoid duplicates by id)
+    const defaultIds = new Set(userVideos.map((v: Video) => v.id))
+    const merged = [...DEFAULT_VIDEOS.filter(v => !defaultIds.has(v.id)), ...userVideos]
+    return merged
   })
   const [showAdd, setShowAdd] = useState(false)
   const [newVideo, setNewVideo] = useState({ title: '', url: '', category: 'Basics' })
@@ -65,11 +85,27 @@ function Videos() {
     setShowAdd(false)
   }
 
+  // Fetch thumbnails for default videos on mount
+  useEffect(() => {
+    DEFAULT_VIDEOS.forEach(async (video) => {
+      if (video.thumbnail) return
+      const thumb = await fetchThumbnail(video.url)
+      if (thumb) {
+        setVideos(prev => prev.map(v => 
+          v.id === video.id ? { ...v, thumbnail: thumb } : v
+        ))
+      }
+    })
+  }, [])
+
+  const isDefault = (id: string) => id.startsWith('default-')
+
   const handleDeleteVideo = (id: string) => {
+    if (isDefault(id)) return
     if (!confirm('Delete this video?')) return
     const updated = videos.filter(v => v.id !== id)
     setVideos(updated)
-    localStorage.setItem('chinese-videos', JSON.stringify(updated))
+    localStorage.setItem('chinese-videos', JSON.stringify(updated.filter(v => !v.id.startsWith('default-'))))
   }
 
   const getVideosByCategory = (category: string) => {
@@ -204,13 +240,15 @@ function Videos() {
                           </div>
                         </div>
 
-                        {/* Delete button */}
+                        {/* Delete button - only for user-added videos */}
+                        {!isDefault(video.id) && (
                         <button
                           onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteVideo(video.id); }}
                           className="absolute top-1.5 right-1.5 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors shadow"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
+                        )}
 
                         {/* Watch hint */}
                         <div className="absolute bottom-1.5 left-1.5 right-1.5 bg-black/60 text-white text-xs px-2 py-1 rounded flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
