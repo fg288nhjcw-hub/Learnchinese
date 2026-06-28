@@ -1,7 +1,4 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { Resend } from 'resend'
-
-const resend = new Resend(process.env.RESEND_API_KEY)
 
 const RATE_LIMIT = new Map<string, { count: number; resetAt: number }>()
 const WINDOW_MS = 60 * 60 * 1000 // 1 hour
@@ -67,8 +64,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Invalid email format' })
   }
 
-  const apiKey = process.env.RESEND_API_KEY
-  if (!apiKey) {
+  const accessKey = process.env.WEB3FORMS_KEY
+  if (!accessKey) {
     return res.status(500).json({ error: 'Server not configured' })
   }
 
@@ -78,30 +75,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const safeMessage = escapeHtml(message.trim())
 
   try {
-    const { data, error } = await resend.emails.send({
-      from: 'Learn Chinese Contact <onboarding@resend.dev>',
-      to: 'amy15862341636@outlook.com',
-      replyTo: email.trim(),
-      subject: `[Learn Chinese] ${subject || 'New contact form submission'}`,
-      html: `
-        <h2>New contact form submission</h2>
-        <p><strong>Name:</strong> ${safeName}</p>
-        <p><strong>Email:</strong> ${safeEmail}</p>
-        <p><strong>Subject:</strong> ${safeSubject}</p>
-        <hr />
-        <h3>Message:</h3>
-        <p style="white-space: pre-wrap;">${safeMessage}</p>
-        <hr />
-        <p style="color: #888; font-size: 12px;">Sent from Learn Chinese website contact form</p>
-      `,
+    const response = await fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        access_key: accessKey,
+        from_name: safeName,
+        email: email.trim(),
+        subject: `[Learn Chinese] ${subject || 'New contact form submission'}`,
+        message: `Name: ${safeName}\nEmail: ${safeEmail}\nSubject: ${safeSubject}\n\nMessage:\n${safeMessage}`,
+      }),
     })
 
-    if (error) {
-      console.error('Resend error:', error)
+    const data = await response.json()
+
+    if (!response.ok || !data.success) {
+      console.error('Web3Forms error:', JSON.stringify(data))
       return res.status(500).json({ error: 'Failed to send email' })
     }
 
-    return res.status(200).json({ success: true, id: data?.id })
+    return res.status(200).json({ success: true })
   } catch (err) {
     console.error('Handler error:', err)
     return res.status(500).json({ error: 'Internal server error' })
