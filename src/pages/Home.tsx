@@ -3,7 +3,7 @@ import { Progress } from '@/components/ui/progress'
 import { Link } from 'react-router-dom'
 import { getProgress, getCompletionPercentage } from '@/utils/progress'
 import { useEffect, useState } from 'react'
-import { BookOpen, MessageSquare, Gamepad2, Trophy, Play } from 'lucide-react'
+import { BookOpen, MessageSquare, Gamepad2, Trophy, Play, Mail } from 'lucide-react'
 
 function Home() {
   const [progress, setProgress] = useState(getProgress())
@@ -153,6 +153,35 @@ function Home() {
           </div>
         </div>
       </main>
+
+      {/* Contact Section */}
+      <section className="mt-16 max-w-4xl mx-auto px-4">
+        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-3">
+              <div className="bg-blue-600 text-white p-3 rounded-full">
+                <Mail className="h-6 w-6" />
+              </div>
+            </div>
+            <CardTitle className="text-2xl">Have Questions About Learning Chinese?</CardTitle>
+            <CardDescription className="text-base mt-2">
+              Feel free to reach out anytime — I'm happy to help you on your Chinese learning journey.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <a
+              href="mailto:amy15862341636@outlook.com"
+              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+            >
+              <Mail className="h-5 w-5" />
+              <span>Contact Me: amy15862341636@outlook.com</span>
+            </a>
+            <p className="text-sm text-gray-500 mt-4">
+              I usually reply within 24 hours 💌
+            </p>
+          </CardContent>
+        </Card>
+      </section>
 
       {/* Footer */}
       <footer className="bg-gray-50 border-t mt-16">
