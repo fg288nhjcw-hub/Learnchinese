@@ -3,16 +3,46 @@ import { Progress } from '@/components/ui/progress'
 import { Link } from 'react-router-dom'
 import { getProgress, getCompletionPercentage } from '@/utils/progress'
 import { useEffect, useState } from 'react'
-import { BookOpen, MessageSquare, Gamepad2, Trophy, Play, Mail } from 'lucide-react'
+import { BookOpen, MessageSquare, Gamepad2, Trophy, Play, Mail, Send } from 'lucide-react'
 
 function Home() {
   const [progress, setProgress] = useState(getProgress())
   const [percentage, setPercentage] = useState(0)
+  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
+  const [loading, setLoading] = useState(false)
+  const [sent, setSent] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     setProgress(getProgress())
     setPercentage(getCompletionPercentage())
   }, [])
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value })
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to send message')
+      }
+      setSent(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const modules = [
     {
@@ -168,17 +198,112 @@ function Home() {
               Feel free to reach out anytime — I'm happy to help you on your Chinese learning journey.
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-center">
-            <a
-              href="mailto:amy15862341636@outlook.com"
-              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
-            >
-              <Mail className="h-5 w-5" />
-              <span>Contact Me: amy15862341636@outlook.com</span>
-            </a>
-            <p className="text-sm text-gray-500 mt-4">
-              I usually reply within 24 hours 💌
-            </p>
+          <CardContent>
+            {sent ? (
+              <div className="text-center py-8">
+                <div className="text-5xl mb-3">✅</div>
+                <h3 className="text-xl font-semibold text-green-700 mb-2">Message Sent!</h3>
+                <p className="text-gray-600">
+                  Thanks for reaching out. I'll get back to you within 24 hours.
+                </p>
+                <button
+                  onClick={() => {
+                    setSent(false)
+                    setForm({ name: '', email: '', subject: '', message: '' })
+                  }}
+                  className="mt-4 text-sm text-blue-600 hover:underline"
+                >
+                  Send another message
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4 max-w-xl mx-auto">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={form.name}
+                    onChange={handleChange}
+                    required
+                    maxLength={100}
+                    placeholder="Your name"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={form.email}
+                    onChange={handleChange}
+                    required
+                    maxLength={200}
+                    placeholder="your@email.com"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Subject
+                  </label>
+                  <input
+                    type="text"
+                    name="subject"
+                    value={form.subject}
+                    onChange={handleChange}
+                    maxLength={200}
+                    placeholder="What's your question about?"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Message <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    name="message"
+                    value={form.message}
+                    onChange={handleChange}
+                    required
+                    maxLength={5000}
+                    rows={5}
+                    placeholder="Tell me what you'd like to know about learning Chinese..."
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+                  />
+                </div>
+                {error && (
+                  <div className="bg-red-50 text-red-700 px-4 py-2 rounded-lg text-sm">
+                    {error}
+                  </div>
+                )}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold px-6 py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4" />
+                      Send Message
+                    </>
+                  )}
+                </button>
+                <p className="text-xs text-gray-500 text-center">
+                  Your email is only used to reply to your message. We never share it.
+                </p>
+              </form>
+            )}
           </CardContent>
         </Card>
       </section>
