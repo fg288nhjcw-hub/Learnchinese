@@ -34,7 +34,7 @@ function Home() {
       })
       const data = await res.json()
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to send message')
+        throw new Error(data.detail ? `${data.error}: ${data.detail}` : (data.error || 'Failed to send message'))
       }
       setSent(true)
     } catch (err) {

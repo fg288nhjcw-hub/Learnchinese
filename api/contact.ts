@@ -90,11 +90,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }),
     })
 
-    const data = await response.json()
+    const data = await response.json().catch(() => ({} as any))
 
     if (!response.ok || !data.success) {
-      console.error('Web3Forms error:', JSON.stringify(data))
-      return res.status(500).json({ error: 'Failed to send email' })
+      console.error('[contact] Web3Forms error:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: data,
+      })
+      return res.status(500).json({
+        error: 'Failed to send email',
+        detail: data?.message || data?.error || response.statusText,
+      })
     }
 
     return res.status(200).json({ success: true })
