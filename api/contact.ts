@@ -75,7 +75,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const safeMessage = escapeHtml(message.trim())
 
   try {
-    const response = await fetch('https://api.web3forms.com/submit', {
+    const response = await fetch('https://web3forms.com/submit', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

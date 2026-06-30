@@ -12,7 +12,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Test outbound fetch to web3forms
   try {
     const start = Date.now()
-    const r = await fetch('https://api.web3forms.com/submit', {
+    const r = await fetch('https://web3forms.com/submit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify({
