@@ -49,7 +49,7 @@ function postToWeb3Forms(
     const body = JSON.stringify(payload)
     const req = httpsRequest(
       {
-        hostname: 'web3forms.com',
+        hostname: 'api.web3forms.com',
         port: 443,
         path: '/submit',
         method: 'POST',
